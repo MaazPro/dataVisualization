@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch and Graph CSV</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.1.2/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <canvas id="myChart" width="800" height="400"></canvas>
+    <script>
+        // Data from: https://data.giss.nasa.gov/gistemp/
+        // Mean from: https://data.giss.nasa.gov/gistemp/
+        /*
+        Step 1: Select the CSV
+        Step 2: Create a smaller more manageble file and use that to test the results
+        Step 3: use the asyn method to fetch the data
+        Step 4: remove the heading of the table and divide the table rows and save it in an array.
+        Step 5: break each row down in to seperate columns and add it to the array.
+        Step 6: use any chart cdn to visualise the data
+        Step 7: modify the imported codes of the bar chart and replace the label(y-axis) and data(x-axis) porperties  with (arrays) the csv file data .
+        Step 8: getData() is an asynchronous function therefore the chartIt() should be asynchronous as well.
+        Step 9: getData() will called in chartIt() as asyn function.  
+        */
+        const ctx = document.getElementById('myChart');
+        const xlabels = [];
+        const ytemps = [];
+        let graphType = "bar";
+           
+        // console.log("ytemps");
+        // console.log(ytemps);
+        chartIt();
+        async function chartIt() {
+            await getData(); // this way it will wait for getData to finish 
+            new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: xlabels,
+                    datasets: [{
+                        label: 'Combined Land-Surface Air and Sea-Surface Water Temperature in °C',
+                        data:  ytemps,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        async function getData() {
+            // const response = await fetch('test.csv');
+            const response = await fetch('ZonAnn.Ts+dSST.csv');
+            //    Catch data stream
+            const data = await response.text(); // the data collected is string
+            // console.log(data); // this will display the table
+            // Spliting each row making it in to an array
+            const rows = data.split("\n");
+            rows.shift();
+            rows.forEach((elt) => {
+                const columns = elt.split(",");
+                const year = columns[0];
+                xlabels.push(year);
+                const temp = columns[1];
+                // Adding 15 to make the value positive in order generate a proper bar chart
+                // During the period of 1951-1980. (The global mean surface air temperature for that period was 14°C (57°F)
+                // source: https://earthobservatory.nasa.gov/world-of-change/global-temperatures
+                ytemps.push(parseFloat(temp)); // temp data is a string data type
+                console.log(year + " | " + temp);
+            });
+            // console.log(rows);
+        }
+    </script>
+</body>
+</html>
